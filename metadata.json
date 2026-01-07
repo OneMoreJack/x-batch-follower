@@ -1,5 +1,5 @@
 {
-  "name": "X Batch Follower",
+  "name": "One-Click Follower for X",
   "description": "Smartly extract X (Twitter) accounts from any webpage and follow them automatically with randomized delays to stay safe.",
   "requestFramePermissions": []
 }

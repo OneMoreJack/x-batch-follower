@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Account, TaskStats, MessageType, SpeedMode } from './types';
 
@@ -24,7 +23,6 @@ const App: React.FC = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any) => {
       const currentTab = tabs[0];
       if (currentTab?.id) {
-        // Only run extraction if we're on a relevant domain to avoid unnecessary script errors
         const isX = currentTab.url?.includes('x.com') || currentTab.url?.includes('twitter.com');
         
         chrome.scripting.executeScript({
@@ -126,7 +124,7 @@ const App: React.FC = () => {
           <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center">
             <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </div>
-          <span className="font-black text-base tracking-tight">Follower Pro</span>
+          <span className="font-black text-base tracking-tight">One-Click Follower</span>
         </div>
         {!isScanning && (
           <button 
@@ -196,7 +194,6 @@ const App: React.FC = () => {
                 ))}
               </div>
               
-              {/* Detailed Warnings */}
               <div className="px-1">
                 {speedMode === SpeedMode.SLOW && (
                   <p className="text-[10px] text-[#536471] leading-tight">
