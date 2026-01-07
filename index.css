@@ -1,0 +1,45 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 基础布局补丁 */
+body {
+  width: 400px;
+  height: 550px;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #ffffff;
+}
+
+#root {
+  height: 100%;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+::-webkit-scrollbar-thumb {
+  background: #eff3f4;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cfd9de;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

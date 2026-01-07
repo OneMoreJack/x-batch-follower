@@ -1,0 +1,27 @@
+
+{
+  "manifest_version": 3,
+  "name": "X Batch Follower Pro",
+  "version": "1.0.0",
+  "description": "Smartly extract X (Twitter) accounts from any webpage and follow them automatically.",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*"
+  ],
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

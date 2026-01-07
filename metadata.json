@@ -1,0 +1,5 @@
+{
+  "name": "X Batch Follower Pro",
+  "description": "Smartly extract X (Twitter) accounts from any webpage and follow them automatically with randomized delays to stay safe.",
+  "requestFramePermissions": []
+}
