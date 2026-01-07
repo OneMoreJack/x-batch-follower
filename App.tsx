@@ -10,7 +10,7 @@ const App: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [stats, setStats] = useState<TaskStats>({ success: 0, skipped: 0, failed: 0, total: 0, isResting: false });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(true); // 默认初始为扫描状态
+  const [isScanning, setIsScanning] = useState(true);
   const [hasScanned, setHasScanned] = useState(false);
   const [speedMode, setSpeedMode] = useState<SpeedMode>(SpeedMode.MEDIUM);
 
@@ -22,14 +22,18 @@ const App: React.FC = () => {
     if (!hasChromeApi) return;
     setIsScanning(true);
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any) => {
-      if (tabs[0]?.id) {
+      const currentTab = tabs[0];
+      if (currentTab?.id) {
+        // Only run extraction if we're on a relevant domain to avoid unnecessary script errors
+        const isX = currentTab.url?.includes('x.com') || currentTab.url?.includes('twitter.com');
+        
         chrome.scripting.executeScript({
-          target: { tabId: tabs[0].id },
+          target: { tabId: currentTab.id },
           files: ['content.js']
         }, (results: any) => {
           setIsScanning(false);
           setHasScanned(true);
-          if (results && results[0]?.result) {
+          if (results && results[0]?.result && results[0].result.length > 0) {
             const extracted = results[0].result;
             const newAccounts: Account[] = extracted.map((item: any) => ({
               id: Math.random().toString(36).substr(2, 9),
@@ -43,7 +47,11 @@ const App: React.FC = () => {
             setErrorMsg(null);
           } else {
             setAccounts([]);
-            setErrorMsg("No accounts found on this page.");
+            if (!isX) {
+              setErrorMsg("Please navigate to x.com to find profiles.");
+            } else {
+              setErrorMsg("No accounts found on this page.");
+            }
           }
         });
       } else {
@@ -58,7 +66,6 @@ const App: React.FC = () => {
       return;
     }
 
-    // 1. 先尝试恢复历史状态
     chrome.storage?.local.get(['taskState'], (result: any) => {
       if (result.taskState) {
         setAccounts(result.taskState.accounts || []);
@@ -69,7 +76,6 @@ const App: React.FC = () => {
         setIsScanning(false);
         if (result.taskState.speedMode) setSpeedMode(result.taskState.speedMode);
       } else {
-        // 2. 如果没有运行中的任务，自动触发扫描
         extractAccountsFromPage();
       }
     });
@@ -145,27 +151,31 @@ const App: React.FC = () => {
               <svg className="w-8 h-8 text-[#536471]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
             <h2 className="text-xl font-black mb-2">No profiles found</h2>
-            <p className="text-[#536471] text-sm mb-8 leading-relaxed px-4">Try navigating to an X profile list or search results and click Rescan.</p>
+            <p className="text-[#536471] text-sm mb-8 leading-relaxed px-4">
+              {errorMsg?.includes('x.com') 
+                ? "Navigate to a profile list, search results, or followers page on X to begin."
+                : "No usernames were detected on this specific area of the page."}
+            </p>
             <button 
               onClick={extractAccountsFromPage}
               className="w-full bg-[#0f1419] text-white py-3.5 rounded-full font-bold text-sm hover:bg-[#272c30] transition-all shadow-sm active:scale-95"
             >
-              Rescan Page
+              Scan Current Page
             </button>
           </div>
         ) : (
           <>
             <div className="bg-[#f7f9f9] px-4 py-3 border-b border-[#eff3f4]">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-[10px] font-bold text-[#536471] uppercase tracking-widest">Speed Settings</span>
+                <span className="text-[10px] font-bold text-[#536471] uppercase tracking-widest">Execution Speed</span>
                 {speedMode === SpeedMode.FAST && (
-                  <span className="text-[10px] font-bold text-orange-600 animate-pulse flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                    High Risk
-                  </span>
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-orange-600 animate-pulse">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                    CRITICAL RISK
+                  </div>
                 )}
               </div>
-              <div className="flex bg-[#eff3f4] p-1 rounded-full relative">
+              <div className="flex bg-[#eff3f4] p-1 rounded-full relative mb-2">
                 {[
                   { label: 'Slow', mode: SpeedMode.SLOW },
                   { label: 'Medium', mode: SpeedMode.MEDIUM },
@@ -184,6 +194,25 @@ const App: React.FC = () => {
                     {option.label}
                   </button>
                 ))}
+              </div>
+              
+              {/* Detailed Warnings */}
+              <div className="px-1">
+                {speedMode === SpeedMode.SLOW && (
+                  <p className="text-[10px] text-[#536471] leading-tight">
+                    <strong className="text-green-600">Safest:</strong> Mimics human behavior with 6-10s intervals. Recommended for accounts with high follower counts or new accounts.
+                  </p>
+                )}
+                {speedMode === SpeedMode.MEDIUM && (
+                  <p className="text-[10px] text-[#536471] leading-tight">
+                    <strong className="text-blue-600">Balanced:</strong> Standard 3-6s intervals. Good for regular daily growth without triggering most flags.
+                  </p>
+                )}
+                {speedMode === SpeedMode.FAST && (
+                  <p className="text-[10px] text-orange-700 leading-tight">
+                    <strong className="text-orange-700">Dangerous:</strong> 1-3s intervals. May trigger X anti-bot detection, leading to <strong>temporary suspension, shadowbanning, or captcha loops.</strong>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -226,10 +255,10 @@ const App: React.FC = () => {
                 />
                 <span className="text-xs font-bold text-[#536471] group-hover:text-black">Select All</span>
               </label>
-              <span className="text-[10px] font-bold text-[#536471] uppercase tracking-widest">{accounts.length} Profiles</span>
+              <span className="text-[10px] font-bold text-[#536471] uppercase tracking-widest">{accounts.length} Profiles Found</span>
             </div>
 
-            <div className="flex-1 overflow-y-auto list-container">
+            <div className="flex-1 overflow-y-auto list-container bg-white">
               <ul className="divide-y divide-[#eff3f4]">
                 {accounts.map((acc, idx) => (
                   <li 
@@ -296,8 +325,12 @@ const App: React.FC = () => {
       )}
 
       {errorMsg && (
-        <div className="absolute bottom-20 left-4 right-4 bg-black text-white text-xs p-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-bottom-2">
-          {errorMsg}
+        <div className="absolute bottom-20 left-4 right-4 bg-black text-white text-[11px] p-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-bottom-2 z-50">
+          <div className="flex items-start gap-2">
+            <svg className="w-4 h-4 shrink-0 mt-0.5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <p className="flex-1">{errorMsg}</p>
+            <button onClick={() => setErrorMsg(null)} className="text-white/50 hover:text-white">✕</button>
+          </div>
         </div>
       )}
     </div>
