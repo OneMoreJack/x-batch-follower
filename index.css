@@ -17,29 +17,19 @@ body {
   height: 100%;
 }
 
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-/* 隐藏输入框原生样式以适配 Tailwind */
-input[type="checkbox"] {
-  border-radius: 4px;
-}
-
-/* 滚动条美化 - 适配 X 风格 */
+/* 统一黑白滚动条 - 极简 X 风格 */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #eff3f4;
+  background: #cfd9de;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #cfd9de;
+  background: #0f1419;
 }
 
 @keyframes spin {
@@ -50,11 +40,15 @@ input[type="checkbox"] {
   animation: spin 1s linear infinite;
 }
 
-/* 优化列表过长的过渡 */
-.flex-1 {
-  flex: 1 1 0%;
+/* 适配 X 的圆形按钮和边框 */
+.btn-black {
+  @apply bg-[#0f1419] text-white hover:bg-[#272c30] active:scale-95 transition-all duration-200 disabled:bg-[#cfd9de] disabled:cursor-not-allowed;
 }
 
-.min-h-0 {
-  min-height: 0;
+.btn-outline {
+  @apply border border-[#cfd9de] text-[#0f1419] hover:bg-[#0f1419]/5 active:scale-95 transition-all duration-200;
+}
+
+.list-container {
+  scrollbar-gutter: stable;
 }
