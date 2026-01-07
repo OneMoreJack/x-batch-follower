@@ -12,21 +12,21 @@ const SPEED_CONFIGS = {
     minDelay: 1000,
     maxDelay: 3000,
     groupSize: 5,
-    groupRest: 3000 // 快模式停顿3秒
+    groupRest: 3000
   },
   medium: {
-    maxConcurrent: 3, // 中模式并发从2调到3
+    maxConcurrent: 3,
     minDelay: 3000,
     maxDelay: 6000,
     groupSize: 5,
-    groupRest: 5000 // 中模式停顿5秒
+    groupRest: 5000
   },
   slow: {
-    maxConcurrent: 2, // 慢模式并发从1调到2
+    maxConcurrent: 2,
     minDelay: 6000,
     maxDelay: 10000,
     groupSize: 5,
-    groupRest: 7000 // 慢模式停顿7秒
+    groupRest: 7000
   }
 };
 
@@ -35,9 +35,27 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     if (message.type === 'START_TASK') {
       startTask(message.accounts, message.speedMode || 'medium');
     } else if (message.type === 'STOP_TASK') {
-      activeTask = null;
+      stopAndCleanup();
     }
   });
+}
+
+function stopAndCleanup() {
+  if (activeTask) {
+    // 将所有处理中的账号恢复为 pending，避免 UI 圈圈一直转
+    const resetAccounts = activeTask.accounts.map(a => 
+      a.status === 'processing' ? { ...a, status: 'pending' } : a
+    );
+    
+    chrome.runtime.sendMessage({ 
+      type: 'TASK_COMPLETE', // 使用 COMPLETE 类型让 UI 停止
+      accounts: resetAccounts,
+      stats: activeTask.stats
+    }).catch(() => {});
+  }
+  
+  activeTask = null;
+  chrome.storage.local.remove('taskState');
 }
 
 async function startTask(accounts, speedMode) {
@@ -63,12 +81,8 @@ async function startTask(accounts, speedMode) {
 async function spawnWorker() {
   if (!activeTask) return;
 
-  // If we are currently in a group rest period, wait
-  if (activeTask.isResting) {
-    return;
-  }
+  if (activeTask.isResting) return;
 
-  // 1. Get next account
   const currentIndex = activeTask.nextIndex++;
   
   if (currentIndex >= activeTask.accounts.length) {
@@ -85,6 +99,9 @@ async function spawnWorker() {
   try {
     const result = await followOnX(account.username);
     
+    // 如果在等待过程中任务被停止了，直接退出
+    if (!activeTask) return;
+
     if (result.status === 'success') {
       account.status = 'success';
       activeTask.stats.success++;
@@ -98,6 +115,7 @@ async function spawnWorker() {
       activeTask.stats.failed++;
     }
   } catch (err) {
+    if (!activeTask) return;
     account.status = 'failed';
     account.error = err.message;
     activeTask.stats.failed++;
@@ -106,7 +124,6 @@ async function spawnWorker() {
   activeTask.activeCount--;
   updateUIAndStorage();
 
-  // 2. Check for Group Break
   if (activeTask.successInSession >= activeTask.config.groupSize && activeTask.activeCount === 0) {
     activeTask.isResting = true;
     activeTask.stats.isResting = true;
@@ -119,7 +136,6 @@ async function spawnWorker() {
       activeTask.successInSession = 0;
       updateUIAndStorage();
       
-      // Resume workers
       for (let i = 0; i < activeTask.config.maxConcurrent; i++) {
         spawnWorker();
       }
@@ -128,7 +144,6 @@ async function spawnWorker() {
     return;
   }
 
-  // 3. Standard Randomized Delay
   const delay = Math.floor(Math.random() * (activeTask.config.maxDelay - activeTask.config.minDelay)) + activeTask.config.minDelay;
   
   if (activeTask && !activeTask.isResting) {

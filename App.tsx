@@ -93,8 +93,12 @@ const App: React.FC = () => {
   };
 
   const stopTask = () => {
-    if (hasChromeApi) chrome.runtime.sendMessage({ type: MessageType.STOP_TASK });
     setIsProcessing(false);
+    // 立即重置 UI 中的加载圈，将 processing 改为 pending
+    setAccounts(prev => prev.map(a => a.status === 'processing' ? { ...a, status: 'pending' } : a));
+    if (hasChromeApi) {
+      chrome.runtime.sendMessage({ type: MessageType.STOP_TASK });
+    }
   };
 
   return (
