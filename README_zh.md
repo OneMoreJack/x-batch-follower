@@ -15,10 +15,9 @@
 
 1.  访问 [Releases](https://github.com/OneMoreJack/One-Click-Follower-for-X/releases) 页面。
 2.  下载最新的 `xxx.zip` 压缩包。
-3.  将压缩包解压到您电脑的一个文件夹中。
-4.  在 Chrome 浏览器中打开 `chrome://extensions/`。
-5.  在右上角开启 **开发者模式**。
-6.  点击 **加载已解压的扩展程序**，选择您刚才解压的文件夹。
+3.  在 Chrome 浏览器中打开 `chrome://extensions/`。
+4.  在右上角开启 **开发者模式**。
+5.  将下载的 `xxx.zip` 文件直接拖动到该页面即可完成安装。
 
 ---
 

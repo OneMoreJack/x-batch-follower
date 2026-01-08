@@ -15,10 +15,9 @@ For the easiest installation without compiling the source code:
 
 1.  Go to the [Releases](https://github.com/OneMoreJack/One-Click-Follower-for-X/releases) page.
 2.  Download the latest `xxx.zip` file.
-3.  Unzip the file into a folder on your computer.
-4.  Open Chrome and navigate to `chrome://extensions/`.
-5.  Enable **Developer mode** in the top right corner.
-6.  Click **Load unpacked** and select the folder you just unzipped.
+3.  Open Chrome and navigate to `chrome://extensions/`.
+4.  Enable **Developer mode** in the top right corner.
+5.  Drag and drop the `xxx.zip` file onto the extensions page to install.
 
 ---
 
